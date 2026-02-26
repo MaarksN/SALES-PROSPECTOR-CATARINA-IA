@@ -5,9 +5,12 @@ import { AllExceptionsFilter } from "./common/filters/all-exceptions.filter";
 import { Logger } from "nestjs-pino";
 import helmet from "helmet";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { raw } from "express";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
+
+  app.use("/stripe/webhook", raw({ type: "application/json" }));
 
   app.useLogger(app.get(Logger));
   app.use(helmet());

@@ -21,19 +21,18 @@ export class TenantGuard implements CanActivate {
     if (!token) throw new UnauthorizedException("Token missing");
 
     try {
-      const secret =
-        process.env.JWT_SECRET ||
-        (process.env.NODE_ENV === "production"
-          ? undefined
-          : "dev_secret_key_123");
+      const secret = process.env.JWT_SECRET;
+      if (!secret && process.env.NODE_ENV === "production") {
+        throw new UnauthorizedException("JWT_SECRET not configured");
+      }
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: secret,
+        secret,
       });
 
       request.user = {
         id: payload.sub,
         email: payload.email,
-        companyId: payload.companyId,
+        orgId: payload.orgId,
         role: payload.role,
       };
       return true;
