@@ -11,36 +11,45 @@ export class AuthService {
   ) {}
 
   async signIn(email: string, pass: string) {
-    // Note: User model doesn't have password in the new schema (assuming Supabase Auth or similar)
-    // For this migration, we'll mock it or assume User has it if we modify schema.
-    // However, the directive says "Supabase Auth Sync", so we should trust Supabase.
-    // But for a standalone login here:
-
-    // Let's assume we use a mock password check against a potential local field or skip it for now.
-    // Reverting to finding User by email.
-
     const user = await this.prisma.user.findUnique({
       where: { email },
       include: { memberships: { include: { organization: true } } },
     });
 
-    // Mock password validation as it's missing in schema (Supabase handles it)
-    if (!user) {
+    if (!user?.passwordHash) {
       throw new UnauthorizedException();
     }
 
-    const payload = { sub: user.id, email: user.email };
+    const isPasswordValid = await bcrypt.compare(pass, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException();
+    }
+
+    const primaryMembership = user.memberships[0];
+    const orgId = primaryMembership?.orgId;
+    const role = primaryMembership?.role;
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      orgId,
+      role,
+    };
     return {
-      access_token: await this.jwtService.signAsync(payload),
+      access_token: await this.jwtService.signAsync(payload, {
+        expiresIn: "8h",
+      }),
     };
   }
 
-  async signUp(email: string, name: string) {
-    // Simplified signup
+  async signUp(email: string, name: string, pass: string) {
+    const passwordHash = await bcrypt.hash(pass, 12);
+
     return this.prisma.user.create({
       data: {
         email,
         name,
+        passwordHash,
         memberships: {
           create: {
             organization: {

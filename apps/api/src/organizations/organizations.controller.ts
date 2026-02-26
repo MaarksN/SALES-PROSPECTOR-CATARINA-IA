@@ -9,8 +9,14 @@ export class OrganizationsController {
   @Get("me")
   @UseGuards(JwtAuthGuard)
   async getMyOrg(@Req() req) {
-    // Assuming user is in req.user
-    // This is a simplified fetch. Real one would filter by member.
-    return this.prisma.organization.findFirst();
+    return this.prisma.organization.findFirst({
+      where: {
+        members: {
+          some: {
+            userId: req.user?.sub,
+          },
+        },
+      },
+    });
   }
 }
