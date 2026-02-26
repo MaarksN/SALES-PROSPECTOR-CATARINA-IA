@@ -33,6 +33,7 @@ model User {
   id          String   @id @default(uuid()) // Supabase UID if possible
   email       String   @unique
   name        String?
+  passwordHash String?
   memberships Member[]
 
   createdAt DateTime @default(now())

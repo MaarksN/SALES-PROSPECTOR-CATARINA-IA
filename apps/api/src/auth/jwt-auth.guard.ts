@@ -19,17 +19,13 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      const secret =
-        process.env.JWT_SECRET ||
-        (process.env.NODE_ENV === "production"
-          ? undefined
-          : "dev_secret_key_123");
+      const secret = process.env.JWT_SECRET;
       if (!secret && process.env.NODE_ENV === "production") {
         throw new Error("JWT_SECRET not configured");
       }
 
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: secret,
+        secret,
       });
       // 💡 We're assigning the payload to the request object here
       // so that we can access it in our route handlers
