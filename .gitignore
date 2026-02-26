@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# build outputs
+dist/
+build/
+coverage/
+.turbo/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editor / os
+.DS_Store
+.vscode/
+.idea/
+
+# misc
+legacy_migration/
+_imported/
+# generated verification artifacts
+verification/*.png
+cycle1_*.png
+verification_*.png
