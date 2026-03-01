@@ -1,8 +1,11 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { PrismaService } from "../database/prisma.service";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { ConfigService } from "@nestjs/config";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
+import * as crypto from "crypto";
 
 @Injectable()
 export class SalesService {
@@ -13,6 +16,7 @@ export class SalesService {
     private prisma: PrismaService,
     private configService: ConfigService,
     private eventEmitter: EventEmitter2,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     const apiKey = this.configService.get<string>("GEMINI_API_KEY");
     if (apiKey) {
@@ -22,7 +26,18 @@ export class SalesService {
   }
 
   async getLeads(orgId: string, skip: number = 0, take: number = 50) {
-    return this.prisma.contact.findMany({
+    const cacheKey = `leads:${orgId}:${skip}:${take}`;
+
+    try {
+      const cached = await this.cacheManager.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    } catch (e) {
+      console.warn('Cache read error:', e);
+    }
+
+    const leads = await this.prisma.contact.findMany({
       where: { orgId },
       orderBy: { createdAt: 'desc' },
       skip,
@@ -46,6 +61,19 @@ export class SalesService {
         orgId,
       },
     });
+
+    try {
+        // Cache invalidation logic
+        const store = (this.cacheManager as any).store;
+        if (store.keys) {
+            const keys = await store.keys(`leads:${orgId}:*`);
+             if (keys && keys.length > 0) {
+                 await Promise.all(keys.map(key => this.cacheManager.del(key)));
+            }
+        }
+    } catch (e) {
+        console.warn('Cache invalidation error:', e);
+    }
 
     this.eventEmitter.emit("sales.lead.created", { leadId: lead.id, orgId });
     return lead;

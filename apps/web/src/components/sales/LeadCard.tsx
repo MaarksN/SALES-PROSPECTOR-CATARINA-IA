@@ -2,10 +2,11 @@ import { memo } from "react";
 import type { Lead } from "@/types/sales";
 import { Button } from "@/components/ui/Button";
 import { Building2, MapPin, Linkedin, Mail, Phone } from "lucide-react";
+
 interface LeadCardProps {
   lead: Lead;
   onClick: (lead: Lead) => void;
-  onCall?: (lead: Lead) => void;
+  onCall: (lead: Lead) => void; // Updated to match usage
 }
 
 function LeadCard({ lead, onClick, onCall }: LeadCardProps) {
