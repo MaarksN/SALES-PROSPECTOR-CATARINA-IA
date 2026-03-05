@@ -35,7 +35,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@nestjs/cli": "^10.3.0",
+    "@nestjs/cli": "^10.4.9",
     "@nestjs/config": "^4.0.2",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-socket.io": "^11.1.12",

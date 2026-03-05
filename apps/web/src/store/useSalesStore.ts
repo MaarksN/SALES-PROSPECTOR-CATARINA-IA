@@ -14,6 +14,7 @@ export const useSalesStore = create<SalesState>((set) => ({
   setLeads: (leads) => set({ leads }),
   addLead: (lead) => set((state) => ({ leads: [lead, ...state.leads] })),
   // Optimistic Update Helper
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateLeadStatus: (id: string, status: any) =>
     set((state) => ({
       leads: state.leads.map((l) => (l.id === id ? { ...l, status } : l)),
